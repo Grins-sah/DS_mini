@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { dataStore } from '../store/dataStore';
+import { api } from '../store/api';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -11,21 +11,21 @@ const UserManagement = () => {
     fetchUsers();
   }, []);
 
-  const fetchUsers = () => {
+  const fetchUsers = async () => {
     try {
       setLoading(true);
-      const allUsers = dataStore.getUsers();
+      const allUsers = await api.listUsers();
       setUsers(allUsers);
       setError('');
     } catch (err) {
-      setError('Failed to fetch users');
+      setError(err.message || 'Failed to fetch users');
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateUser = (e) => {
+  const handleCreateUser = async (e) => {
     e.preventDefault();
     if (!newUser.id || !newUser.name.trim()) {
       setError('ID and Name are required');
@@ -34,10 +34,10 @@ const UserManagement = () => {
 
     try {
       setLoading(true);
-      dataStore.addUser(newUser.id, newUser.name);
+      await api.createUser(newUser.id, newUser.name);
       setNewUser({ id: '', name: '' });
       setError('');
-      fetchUsers();
+      await fetchUsers();
     } catch (err) {
       setError(err.message || 'Failed to create user');
       console.error(err);

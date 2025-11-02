@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { dataStore } from '../store/dataStore';
+import { api } from '../store/api';
 
 const Balances = () => {
   const [users, setUsers] = useState([]);
@@ -27,30 +27,30 @@ const Balances = () => {
     }
   }, [selectedUserId]);
 
-  const fetchUsers = () => {
+  const fetchUsers = async () => {
     try {
-      const allUsers = dataStore.getUsers();
+      const allUsers = await api.listUsers();
       setUsers(allUsers);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const fetchOwedAmounts = (userId) => {
+  const fetchOwedAmounts = async (userId) => {
     try {
       setLoading(true);
       setError('');
-      const amounts = dataStore.getOwedAmounts(userId);
+      const amounts = await api.getUserOwed(userId);
       setOwedAmounts(amounts);
     } catch (err) {
-      setError('Failed to fetch owed amounts');
+      setError(err.message || 'Failed to fetch owed amounts');
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRecordPayment = (e) => {
+  const handleRecordPayment = async (e) => {
     e.preventDefault();
     if (!payment.fromUserId || !payment.toUserId || !payment.amount) {
       setError('All fields are required');
@@ -61,7 +61,7 @@ const Balances = () => {
       setLoading(true);
       setError('');
       setSuccess('');
-      dataStore.recordPayment(
+      await api.recordPayment(
         parseInt(payment.fromUserId),
         parseInt(payment.toUserId),
         parseFloat(payment.amount)
@@ -69,7 +69,7 @@ const Balances = () => {
       setSuccess('Payment recorded successfully!');
       setPayment({ fromUserId: '', toUserId: '', amount: '' });
       if (selectedUserId) {
-        fetchOwedAmounts(selectedUserId);
+        await fetchOwedAmounts(selectedUserId);
       }
     } catch (err) {
       setError(err.message || 'Failed to record payment');
@@ -78,7 +78,7 @@ const Balances = () => {
     }
   };
 
-  const handleSettlePayment = (fromUserId, toUserId) => {
+  const handleSettlePayment = async (fromUserId, toUserId) => {
     if (!window.confirm('Are you sure you want to settle all debt between these users?')) {
       return;
     }
@@ -87,11 +87,9 @@ const Balances = () => {
       setLoading(true);
       setError('');
       setSuccess('');
-      dataStore.settlePayment(fromUserId, toUserId);
+      await api.settlePayment(fromUserId, toUserId);
       setSuccess('Payment settled successfully!');
-      if (selectedUserId) {
-        fetchOwedAmounts(selectedUserId);
-      }
+      if (selectedUserId) await fetchOwedAmounts(selectedUserId);
     } catch (err) {
       setError(err.message || 'Failed to settle payment');
     } finally {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { dataStore } from '../store/dataStore';
+import { api } from '../store/api';
 
 const ExpenseSplit = () => {
   const [users, setUsers] = useState([]);
@@ -23,16 +23,16 @@ const ExpenseSplit = () => {
     fetchUsers();
   }, []);
 
-  const fetchUsers = () => {
+  const fetchUsers = async () => {
     try {
-      const allUsers = dataStore.getUsers();
+      const allUsers = await api.listUsers();
       setUsers(allUsers);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleEqualSplit = (e) => {
+  const handleEqualSplit = async (e) => {
     e.preventDefault();
     if (!equalSplit.paidByUserId || !equalSplit.totalAmount) {
       setError('All fields are required');
@@ -43,7 +43,7 @@ const ExpenseSplit = () => {
       setLoading(true);
       setError('');
       setSuccess('');
-      dataStore.splitExpenseEqual(
+      await api.splitEqual(
         parseInt(equalSplit.paidByUserId),
         parseFloat(equalSplit.totalAmount)
       );
@@ -56,7 +56,7 @@ const ExpenseSplit = () => {
     }
   };
 
-  const handleArbitrarySplit = (e) => {
+  const handleArbitrarySplit = async (e) => {
     e.preventDefault();
     if (!arbitrarySplit.paidByUserId || !arbitrarySplit.totalAmount) {
       setError('Paid by and total amount are required');
@@ -84,7 +84,7 @@ const ExpenseSplit = () => {
       setLoading(true);
       setError('');
       setSuccess('');
-      dataStore.splitExpenseArbitrary(
+      await api.splitArbitrary(
         parseInt(arbitrarySplit.paidByUserId),
         parseFloat(arbitrarySplit.totalAmount),
         validSplits.map((s) => ({

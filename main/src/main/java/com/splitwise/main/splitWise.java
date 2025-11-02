@@ -92,26 +92,26 @@ public class splitWise  {
         }
     }
 
-    // Record a payment from fromUserId to toUserId, reducing owed amount.
+    // Record a payment from fromUserId (debtor) to toUserId (creditor), reducing what debtor owes to creditor.
     // If amount >= current owed, the entry is cleared.
     public void recordPayment(Integer fromUserId, Integer toUserId, Double amount) {
         if (amount == null || amount <= 0) return;
-        if (!users.containsKey(toUserId)) return;
-        User receiver = users.get(toUserId);
-        // receiver.owedAmounts[fromUserId] holds how much fromUser owes to toUser
-        Double current = receiver.getOwedAmounts().getOrDefault(fromUserId, 0.0);
+        if (!users.containsKey(toUserId)) return; // creditor must exist
+        User creditor = users.get(toUserId);
+        // creditor.owedAmounts[fromUserId] holds how much fromUser owes to toUser
+        Double current = creditor.getOwedAmounts().getOrDefault(fromUserId, 0.0);
         if (current <= 0) return; // nothing to reduce
-        receiver.assignOwedAmount(fromUserId, -amount);
-        // assignOwedAmount already removes on zero via User logic
+        creditor.assignOwedAmount(fromUserId, -amount);
+        // assignOwedAmount removes mapping when it reaches ~0
     }
 
-    // Settle payment entirely: clear any owed balance from fromUserId to toUserId
+    // Settle payment entirely: clear any owed balance from fromUserId (debtor) to toUserId (creditor)
     public void settlePayment(Integer fromUserId, Integer toUserId) {
-        if (!users.containsKey(toUserId)) return;
-        User receiver = users.get(toUserId);
-        Double current = receiver.getOwedAmounts().getOrDefault(fromUserId, 0.0);
+        if (!users.containsKey(toUserId)) return; // creditor must exist
+        User creditor = users.get(toUserId);
+        Double current = creditor.getOwedAmounts().getOrDefault(fromUserId, 0.0);
         if (current != 0.0) {
-            receiver.assignOwedAmount(fromUserId, -current);
+            creditor.assignOwedAmount(fromUserId, -current);
         }
     }
 
